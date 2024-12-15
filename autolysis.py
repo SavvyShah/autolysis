@@ -26,83 +26,18 @@ import traceback
 load_dotenv()  # Load .env file
 proxy_token = os.getenv("AIPROXY_TOKEN")
 
-analysis_types = """
-1. Outlier and Anomaly Detection
-Outlier and anomaly detection techniques help identify data points that deviate significantly from the rest of the data, which may indicate errors, fraud, or interesting patterns.
-
-- What are the outliers or anomalies in the dataset?
-- Which data points deviate from the general trend or expected behavior?
-- Are there any unusual or extreme values in the dataset that could indicate errors or rare events?
-- How can we identify potential fraud or mistakes in the dataset based on outliers?
-- What methods can we use to remove or handle outliers without distorting the overall analysis?
-- How does the presence of outliers affect the results of the analysis or model?
-
-2. Correlation Analysis, Regression Analysis, and Feature Importance Analysis
-These techniques analyze relationships between variables and help predict outcomes based on feature dependencies.
-
-- What are the relationships between different variables in the dataset?
-- Which variables are most strongly correlated with each other?
-- How do independent variables influence a dependent variable in a regression model?
-- Which features are the most important predictors of a target variable?
-- Can we predict one variable based on others? If so, which variables provide the best predictive power?
-- What are the coefficients of a regression model, and what do they tell us about the relationship between variables?
-- How can we assess multicollinearity and its impact on the regression model?
-
-3. Time Series Analysis
-Time series analysis is used to analyze data points collected or recorded at specific time intervals, helping uncover trends, cycles, and seasonal patterns.
-
-- What are the long-term trends in the data?
-- Are there any seasonal patterns or periodic cycles in the data?
-- Can we predict future values or trends based on historical data?
-- How do we model time-dependent data and account for seasonality and trends?
-- Are there any sudden shifts or anomalies in the time series data (e.g., structural breaks)?
-- What is the forecast for future values in the time series?
-- How do different time intervals (e.g., daily, monthly, yearly) affect the analysis?
-
-4. Cluster Analysis
-Cluster analysis groups similar data points together, helping identify natural groupings or patterns in the data, often used in market segmentation, customer analysis, or pattern recognition.
-
-- How can we group the data into distinct clusters based on similar characteristics?
-- What are the different segments or categories that naturally exist in the dataset?
-- How can we identify homogeneous groups in the dataset that share common features?
-- What characteristics define each of the identified clusters?
-- How many clusters should we use, and how do we evaluate the quality of clustering?
-- What is the distance or similarity between different clusters?
-- What happens to the data when it is clustered using different methods (e.g., K-means, hierarchical)?
-
-5. Geographic Analysis
-Geographic analysis looks at spatial relationships between data points, helping to understand the geographic distribution and relationships between locations.
-
-- What patterns exist in the data based on geographical location?
-- Are there geographic areas where specific events or trends are more prominent?
-- How are variables distributed across different geographic regions or areas?
-- Can we identify areas of interest or concern based on spatial data?
-- What are the relationships between location and certain outcomes (e.g., sales, health outcomes)?
-- Can we visualize the data geographically to identify clusters or patterns?
-- What is the effect of geographic factors (e.g., proximity to resources, location-specific policies) on the data?
-
-6. Network/Graph Analysis
-Network analysis focuses on the relationships and interactions between entities (nodes) connected by edges (links). It is often used to study social networks, communication networks, transportation systems, etc.
-
-- What is the structure of the network (e.g., social network, communication network)?
-- How do different nodes (individuals, entities) in the network interact with each other?
-- Which nodes are most central or influential in the network?
-- Are there any communities or clusters of nodes that are more densely connected?
-- What is the shortest path or optimal route between two nodes in the network?
-- How do changes in one part of the network affect other parts of the network?
-- Are there any isolated nodes or disconnected subgraphs in the network?
-- How resilient or robust is the network to node or edge failures?
-- What is the flow of information or resources through the network?
-"""
-
 # Pass data to the template
 # Usage: script_template.format(data)
 # Usage: script_template.format(data=data)
 script_template = """
-Write a script which uses different analysis techniques as appropriate and saves files in the current folder. For analysis you can print descriptive logs. You can also generate PNG images to help in analysis.
-Image and log file names should be descriptive, meaningful and should include the name of the technique used. Image should be stored with `.png` extension and log file with `.txt` extension. Logs printed should be descriptive and should clearly show how the analysis was performed.
+Create a script which performs the following
+1. Preprocess the data: Clean, fix and transform data as necessary to prepare it for analysis.
+2. Perform the analysis using various techniques as shown below
+3. For each analysis performed print meaningful statements to describe how the analysis was done and the results of the analysis into .txt file and save any plots as .png in the current folder. Remember .txt and .png files should be saved in current folder.
 
 You can use any system dependency but only use the following third party dependencies: pandas, numpy, matplotlib, seaborn, scikit-learn when writing the analyse script.
+
+CSV dataset file may not be UTF-8 so need to handle it gracefully.
 
 Choose from the following analysis techniques and write a script which would print logs and images which can help in answering questions. Example questions which can be answered by each of the techniques are listed below.:
 1. Outlier and Anomaly Detection
@@ -225,7 +160,11 @@ def parse_script(content):
         raise ValueError("No Python code block found in the input.")
 
 
-def get_script(data_description):
+def get_script(data_description, retry=1):
+    if retry < 0:
+        print("Max retry reached for get_script")
+        return
+
     response = requests.post(
         "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions",
         headers={"Authorization": f"Bearer {proxy_token}"},
@@ -242,7 +181,12 @@ def get_script(data_description):
     result = response.json()
     answer = result["choices"][0]["message"]["content"]
 
-    script = parse_script(answer)
+    try:
+        script = parse_script(answer)
+    except ValueError as e:
+        print(e)
+        print("Failed to parse the script. Retrying.")
+        script = get_script(data_description, retry=retry - 1)
     print("Generated Script:")
     print(script)
 
@@ -280,7 +224,7 @@ def retry_script_if_failed(script, retry_count=3):
     """Retry script execution if failed, up to a max retry count."""
     if retry_count <= 0:
         print("Max retries reached. Could not fix the script.")
-        return
+        return script
 
     try:
         # Create a dictionary for the global scope else exec would run in the current scope
@@ -301,7 +245,7 @@ def retry_script_if_failed(script, retry_count=3):
         improved_script = improve_script(script, error_message + "\n\n" + stack_trace)
         print("Retrying with the improved script...")
         # Retry the execution with the improved script
-        retry_script_if_failed(improved_script, retry_count - 1)
+        return retry_script_if_failed(improved_script, retry_count - 1)
 
 
 def prepare_summary(summary_statistics):
@@ -336,9 +280,6 @@ def prepare_summary(summary_statistics):
             with open(os.path.join(current_directory, file_name), "r") as file:
                 text_content = file.read()
                 content.append({"type": "text", "text": text_content})
-
-    print("Image links are below:")
-    print(image_links)
 
     response = requests.post(
         "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions",
@@ -405,25 +346,24 @@ def main():
     # Step 1: Load dataset
     with open(filename, encoding="utf-8", errors="replace") as f:
         df = pd.read_csv(f)
-    df.to_csv(filename, index=False, encoding="utf-8")
 
     # Step 2: Pass analysis results to the LLM and get the script
     llm_input = {
         "filename": filename,
         "columns": [{"name": col, "type": str(df[col].dtype)} for col in df.columns],
+        "data_descriptive_statistics": df.describe(include="all"),
     }
 
     script = get_script(llm_input)
 
     # Execute the LLM script and retry if it fails
-    retry_script_if_failed(script, retry_count=1)
+    script = retry_script_if_failed(script, retry_count=1)
 
     # Check if any png and txt file got created in current folder
     current_directory = os.getcwd()
     new_png_files = [f for f in os.listdir(current_directory) if f.endswith(".png")]
-    new_text_files = [f for f in os.listdir(current_directory) if f.endswith(".txt")]
-    if len(new_png_files) == 0 and len(new_text_files) == 0:
-        print("Error! No new png or txt files created.")
+    if len(new_png_files) == 0:
+        print("Error! No new png files created.")
         script = improve_script(
             script,
             no_files_template,
@@ -431,7 +371,7 @@ def main():
         retry_script_if_failed(script, retry_count=1)
 
     # Check the analysis in the analysis folder and prepare a summary
-    prepare_summary(df.describe(include="all"))
+    prepare_summary(llm_input["data_descriptive_statistics"])
 
 
 if __name__ == "__main__":
