@@ -410,7 +410,7 @@ def main():
     script = get_script(llm_input)
 
     # Execute the LLM script and retry if it fails
-    retry_script_if_failed(script, retry=2)
+    retry_script_if_failed(script, retry_count=1)
 
     # Check if any png and txt file got created in current folder
     current_directory = os.getcwd()
