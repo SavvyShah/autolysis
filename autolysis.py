@@ -410,7 +410,7 @@ def main():
     script = get_script(llm_input)
 
     # Execute the LLM script and retry if it fails
-    retry_script_if_failed(script)
+    retry_script_if_failed(script, retry=2)
 
     # Check if any png and txt file got created in current folder
     current_directory = os.getcwd()
@@ -422,7 +422,7 @@ def main():
             script,
             "Please execute the script to generate the .png and .txt files. Maybe you forgot to call the function which generates those files. Or you are not generating the files in the current folder.",
         )
-        retry_script_if_failed(script)
+        retry_script_if_failed(script, retry_count=1)
 
     # Check the analysis in the analysis folder and prepare a summary
     prepare_summary(df.describe(include="all"))
