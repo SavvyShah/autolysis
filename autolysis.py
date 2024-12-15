@@ -311,7 +311,7 @@ def prepare_summary(summary_statistics):
             # Get base64 encoded image content
             image_path = os.path.join(current_directory, file_name)
 
-            image_links.append(f"/{file_name}")
+            image_links.append(file_name)
             with open(image_path, "rb") as f:
                 image_base64 = base64.b64encode(f.read()).decode()
 

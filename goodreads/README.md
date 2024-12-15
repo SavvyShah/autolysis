@@ -41,7 +41,7 @@ The correlation matrix indicates relationships between various features. Some no
 - **Ratings count** has a strong positive correlation with **work_ratings_count** (0.98) and with ratings across all star categories.
 - A significant negative correlation exists between **book_id** and the average number of **ratings**.
 
-![Correlation Matrix](/CorrelationAnalysis_Heatmap.png)
+![Correlation Matrix](CorrelationAnalysis_Heatmap.png)
 
 ### Regression Analysis
 
@@ -50,13 +50,13 @@ A regression analysis was performed to understand the relationship between **rat
 - **Regression Coefficient**: \[7.27 \times 10^{-8}\]
 - **Mean Squared Error (MSE)**: 0.0646
 
-![Regression Analysis](/RegressionAnalysis_Scatter.png)
+![Regression Analysis](RegressionAnalysis_Scatter.png)
 
 ### Time Series Analysis
 
 The time series analysis indicates a generally upward trend in average ratings from the early years to the present, suggesting improved ratings over time.
 
-![Time Series Analysis](/TimeSeriesAnalysis_Trend.png)
+![Time Series Analysis](TimeSeriesAnalysis_Trend.png)
 
 ### Clustering Analysis
 
@@ -66,7 +66,7 @@ A clustering analysis demonstrated three distinct clusters based on ratings coun
 2. **Cluster 1**: Moderate ratings count with higher average ratings.
 3. **Cluster 2**: Higher ratings count, where most books fall into this category with good average ratings.
 
-![Cluster Analysis](/ClusterAnalysis_Scatter.png)
+![Cluster Analysis](ClusterAnalysis_Scatter.png)
 
 ### Conclusion
 
@@ -76,8 +76,8 @@ The insights generated can be utilized to better understand reader preferences a
 
 ### Images Included
 
-- ![](/OutlierDetection_Boxplot.png)
-- ![](/CorrelationAnalysis_Heatmap.png)
-- ![](/TimeSeriesAnalysis_Trend.png)
-- ![](/RegressionAnalysis_Scatter.png)
-- ![](/ClusterAnalysis_Scatter.png)
+- ![](OutlierDetection_Boxplot.png)
+- ![](CorrelationAnalysis_Heatmap.png)
+- ![](TimeSeriesAnalysis_Trend.png)
+- ![](RegressionAnalysis_Scatter.png)
+- ![](ClusterAnalysis_Scatter.png)
