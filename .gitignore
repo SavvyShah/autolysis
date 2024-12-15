@@ -1,0 +1,6 @@
+venv
+.DS_Store
+INSTRUCTIONS.md
+.env
+datasets
+*.csv
