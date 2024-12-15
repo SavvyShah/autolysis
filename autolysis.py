@@ -188,10 +188,13 @@ Please fix the error in the script and output the complete script to be executed
 """
 
 summary_template = """
-"Prepare a summary from all the image and log/text files passed which are stored in the current folder. The content returned should be in markdown format.
+"Prepare a detailed report from all the image and log/text files passed which are stored in the current folder. The content should be presented as a narrative. The content returned should be in markdown format.
 This content would be added in the README in the current folder and should reference the images stored in the current folder as appropriate.
 
-The summary should include observations and conclusions.
+The report should atleast include descriptive statistics, observations and conclusions among other things.
+The summary statistics generated for this dataset is as follow:
+{summary_stats}
+
 
 Use the below image links when inserting images so it would load in markdown. Eg. ![](image_link):
 {image_links}
@@ -295,7 +298,8 @@ def retry_script_if_failed(script, retry_count=3):
         retry_script_if_failed(improved_script, retry_count - 1)
 
 
-def prepare_summary():
+def prepare_summary(summary_statistics):
+    print("Generating summary")
     content = []
     image_links = []
     # Iterate over all the files in current folder
@@ -327,6 +331,9 @@ def prepare_summary():
                 text_content = file.read()
                 content.append({"type": "text", "text": text_content})
 
+    print("Image links are below:")
+    print(image_links)
+
     response = requests.post(
         "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions",
         headers={"Authorization": f"Bearer {proxy_token}"},
@@ -339,7 +346,8 @@ def prepare_summary():
                         {
                             "type": "text",
                             "text": summary_template.format(
-                                image_links="\n".join(image_links)
+                                image_links="\n".join(image_links),
+                                summary_stats=summary_statistics,
                             ),
                         }
                     ],
@@ -393,34 +401,31 @@ def main():
         df = pd.read_csv(f)
     df.to_csv(filename, index=False, encoding="utf-8")
 
-    # Step 2: Generic Analysis
-    summary_stats = df.describe(include="all")
-
-    # Step 3: Pass analysis results to the LLM and get the script
+    # Step 2: Pass analysis results to the LLM and get the script
     llm_input = {
         "filename": filename,
         "columns": [{"name": col, "type": str(df[col].dtype)} for col in df.columns],
-        "summary_statistics": summary_stats.to_dict(),
     }
 
     script = get_script(llm_input)
 
-    # Step 4: Execute the LLM script and retry if it fails
+    # Execute the LLM script and retry if it fails
     retry_script_if_failed(script)
 
-    # Step 4a: Check if new png and txt file got created in current folder
+    # Check if any png and txt file got created in current folder
     current_directory = os.getcwd()
     new_png_files = [f for f in os.listdir(current_directory) if f.endswith(".png")]
     new_text_files = [f for f in os.listdir(current_directory) if f.endswith(".txt")]
     if len(new_png_files) == 0 and len(new_text_files) == 0:
         print("Error! No new png or txt files created.")
         script = improve_script(
-            script, "Please execute the script to generate the png and txt files."
+            script,
+            "Please execute the script to generate the .png and .txt files. Maybe you forgot to call the function which generates those files. Or you are not generating the files in the current folder.",
         )
         retry_script_if_failed(script)
 
-    # Step 5: Check the analysis in the analysis folder and prepare a summary
-    prepare_summary()
+    # Check the analysis in the analysis folder and prepare a summary
+    prepare_summary(df.describe(include="all"))
 
 
 if __name__ == "__main__":
