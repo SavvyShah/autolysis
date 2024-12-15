@@ -200,6 +200,12 @@ Use the below image links when inserting images so it would load in markdown. Eg
 {image_links}
 """
 
+no_files_template = """
+Please execute the script to generate the .png and .txt files in the current folder. Check for below fixes and make them.
+1. Make sure to call the function which generates those files. When we execute the script it should generate png and txt files
+2. The files should be generated in the current folder.
+"""
+
 
 def parse_script(content):
 
@@ -420,7 +426,7 @@ def main():
         print("Error! No new png or txt files created.")
         script = improve_script(
             script,
-            "Please execute the script to generate the .png and .txt files. Maybe you forgot to call the function which generates those files. Or you are not generating the files in the current folder.",
+            no_files_template,
         )
         retry_script_if_failed(script, retry_count=1)
 
