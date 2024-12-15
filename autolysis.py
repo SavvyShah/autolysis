@@ -100,11 +100,11 @@ Network analysis focuses on the relationships and interactions between entities 
 # Usage: script_template.format(data=data)
 script_template = """
 Write a script which uses different analysis techniques as appropriate and saves files in the current folder. For analysis you can print descriptive logs. You can also generate PNG images to help in analysis.
-Image and log file names should be descriptive, meaningful and should include the name of the technique used. Image should be stored with `.png` extension and log file with `.txt` extension.
+Image and log file names should be descriptive, meaningful and should include the name of the technique used. Image should be stored with `.png` extension and log file with `.txt` extension. Logs printed should be descriptive and should clearly show how the analysis was performed.
 
 You can use any system dependency but only use the following third party dependencies: pandas, numpy, matplotlib, seaborn, scikit-learn when writing the analyse script.
 
-Choose from the following analysis techniques and write a script which would print meaningful logs and images which can help in answering questions. Example questions which can be answered by each of the techniques are listed below.:
+Choose from the following analysis techniques and write a script which would print logs and images which can help in answering questions. Example questions which can be answered by each of the techniques are listed below.:
 1. Outlier and Anomaly Detection
 Outlier and anomaly detection techniques help identify data points that deviate significantly from the rest of the data, which may indicate errors, fraud, or interesting patterns.
 
